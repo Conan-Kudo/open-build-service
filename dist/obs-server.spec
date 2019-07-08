@@ -330,6 +330,16 @@ export DESTDIR=$RPM_BUILD_ROOT
 
 export OBS_VERSION="%{version}"
 DESTDIR=%{buildroot} make install FILLUPDIR=%{_fillupdir}
+
+%if 0%{?suse_version}
+systemd_services="$(basename --multiple --suffix .service %{buildroot}%{_unitdir}/*.service)"
+for systemd_service in $systemd_services; do
+    if [[ $systemd_service != *"@"* ]]; then
+        ln -sf /usr/sbin/service %{buildroot}%{_sbindir}/rc${systemd_service}
+    fi
+done
+%endif
+
 if [ -f %{_sourcedir}/open-build-service.obsinfo ]; then
     sed -n -e 's/commit: \(.\+\)/\1/p' %{_sourcedir}/open-build-service.obsinfo > %{buildroot}/srv/www/obs/api/last_deploy
 else
@@ -640,6 +650,7 @@ fi
 /usr/sbin/obs_admin
 /usr/sbin/obs_serverstatus
 /usr/sbin/obsscheduler
+%if 0%{?suse_version}
 /usr/sbin/rcobsdispatcher
 /usr/sbin/rcobspublisher
 /usr/sbin/rcobsrepserver
@@ -653,6 +664,7 @@ fi
 /usr/sbin/rcobssigner
 /usr/sbin/rcobsnotifyforward
 /usr/sbin/rcobsredis
+%endif
 /usr/lib/obs/server/plugins
 /usr/lib/obs/server/BSDispatcher
 /usr/lib/obs/server/BSRepServer
@@ -719,7 +731,9 @@ usermod -a -G docker obsservicerun
 %defattr(-,root,root)
 %{_unitdir}/obsworker.service
 /usr/sbin/obsworker
+%if 0%{?suse_version}
 /usr/sbin/rcobsworker
+%endif
 
 %files -n obs-api
 %defattr(-,root,root)
@@ -763,7 +777,7 @@ usermod -a -G docker obsservicerun
 %{_unitdir}/obs-delayedjob-queue-releasetracking.service
 %{_unitdir}/obs-delayedjob-queue-staging.service
 %{_unitdir}/obs-sphinx.service
-%{_sbindir}/rcobs-api-support
+%if 0%{?suse_version}
 %{_sbindir}/rcobs-clockwork
 %{_sbindir}/rcobs-delayedjob-queue-consistency_check
 %{_sbindir}/rcobs-delayedjob-queue-default
@@ -774,6 +788,7 @@ usermod -a -G docker obsservicerun
 %{_sbindir}/rcobs-delayedjob-queue-staging
 %{_sbindir}/rcobs-sphinx
 %{_sbindir}/rcobsapisetup
+%endif
 /srv/www/obs/api/app
 %attr(-,%{apache_user},%{apache_group})  /srv/www/obs/api/db/structure.sql
 %attr(-,%{apache_user},%{apache_group})  /srv/www/obs/api/db/data_schema.rb
@@ -839,7 +854,9 @@ usermod -a -G docker obsservicerun
 /usr/lib/obs/server/setup-appliance.sh
 %{_unitdir}/obsstoragesetup.service
 /usr/sbin/obsstoragesetup
+%if 0%{?suse_version}
 /usr/sbin/rcobsstoragesetup
+%endif
 
 %files -n obs-utils
 %defattr(-,root,root)
@@ -855,8 +872,10 @@ usermod -a -G docker obsservicerun
 %defattr(-,root,root)
 %{_unitdir}/obsclouduploadworker.service
 %{_unitdir}/obsclouduploadserver.service
+%if 0%{?suse_version}
 /usr/sbin/rcobsclouduploadworker
 /usr/sbin/rcobsclouduploadserver
+%endif
 /usr/lib/obs/server/bs_clouduploadserver
 /usr/lib/obs/server/bs_clouduploadworker
 %{_bindir}/clouduploader
